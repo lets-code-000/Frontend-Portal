@@ -12,8 +12,12 @@
 
 	let { data }: Props = $props();
 
-	let faculties = $state(data.faculties || []);
+	let faculties = $state([]);
 	let toast = $state<{ type: 'success' | 'error'; message: string } | null>(null);
+
+	$effect(() => {
+		faculties = data.faculties || [];
+	});
 
 	function showToast(type: 'success' | 'error', message: string) {
 		toast = { type, message };
