@@ -48,3 +48,4 @@
 </script>
 
 <EntityForm {config} {form} />
+
