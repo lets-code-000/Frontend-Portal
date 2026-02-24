@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 
-	import { BookOpenText, Hotel, UserRoundPen, GraduationCap, BookMarked, CalendarDays, LogOut, Building2, User, ChevronUp } from 'lucide-svelte';
+	import { BookOpenText, Hotel, UserRoundPen, GraduationCap, BookMarked, CalendarDays, LogOut, User, ChevronUp } from 'lucide-svelte';
 
 	interface CurrentUser {
 		id: number;
@@ -18,7 +18,6 @@
 	let isMenuOpen = $state(false);
 
 	const menuItems = [
-		{ name: 'College', path: '/college', icon: Building2 },
 		{ name: 'Classroom', path: '../classroom', icon: BookOpenText },
 		{ name: 'Departments', path: '../department', icon: Hotel },
 		{ name: 'Users', path: '/user', icon: UserRoundPen },
