@@ -2,7 +2,14 @@
 	import { goto } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 
-	import { BookOpenText, Hotel, UserRoundPen, GraduationCap, BookMarked, CalendarDays, LogOut, Building2, User, ChevronUp } from 'lucide-svelte';
+	import { BookOpenText, Hotel, UserRoundPen, GraduationCap, BookMarked, CalendarDays, LogOut, User, ChevronUp, Building2 } from 'lucide-svelte';
+
+	interface College {
+		id: number;
+		name: string;
+		address: string | null;
+		contact: string | null;
+	}
 
 	interface CurrentUser {
 		id: number;
@@ -10,7 +17,7 @@
 		email: string;
 		phone_number: string | null;
 		role_id: number | null;
-		college_id: number | null;
+		college: College | null;
 	}
 
 	let { children, currentUser }: { children?: Snippet; currentUser?: CurrentUser | null } = $props();
@@ -18,7 +25,6 @@
 	let isMenuOpen = $state(false);
 
 	const menuItems = [
-		{ name: 'College', path: '/college', icon: Building2 },
 		{ name: 'Classroom', path: '../classroom', icon: BookOpenText },
 		{ name: 'Departments', path: '../department', icon: Hotel },
 		{ name: 'Users', path: '/user', icon: UserRoundPen },
@@ -44,6 +50,11 @@
 	function goToProfile() {
 		isMenuOpen = false;
 		goto('/profile');
+	}
+
+	function goToCollege() {
+		isMenuOpen = false;
+		goto('/college');
 	}
 
 	function handleLogout() {
@@ -92,6 +103,16 @@
 			<!-- Dropdown Menu (appears above the button) -->
 			{#if isMenuOpen}
 				<div class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+					{#if currentUser?.college}
+						<button
+							class="flex w-full items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
+							onclick={goToCollege}
+						>
+							<Building2 class="w-4 h-4" />
+							<span class="text-sm font-medium">College</span>
+						</button>
+						<div class="border-t border-gray-100"></div>
+					{/if}
 					<button
 						class="flex w-full items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
 						onclick={goToProfile}
