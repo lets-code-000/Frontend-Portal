@@ -12,7 +12,8 @@
 
 	let { data }: Props = $props();
 
-	let subjects = $state(data.subjects || []);
+	let subjects: NonNullable<typeof data.subjects> = $state([]);
+	$effect(() => { subjects = data.subjects ?? []; });
 	let toast = $state<{ type: 'success' | 'error'; message: string } | null>(null);
 
 	function showToast(type: 'success' | 'error', message: string) {
