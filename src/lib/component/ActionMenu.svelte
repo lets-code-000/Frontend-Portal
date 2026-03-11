@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MoreVertical } from 'lucide-svelte';
+	import { MoreVertical, Pencil, Trash2 } from 'lucide-svelte';
 	import { onMount, onDestroy } from 'svelte';
 
 	interface Props {
@@ -91,18 +91,22 @@
 		class="fixed bg-white rounded-md shadow-lg border border-gray-200 py-1"
 		style="top: {menuPosition.top}px; left: {menuPosition.left}px; z-index: 9999; min-width: 120px;"
 	>
+
 		<button
 			type="button"
-			class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+			class="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
 			onclick={handleEdit}
 		>
+			<Pencil class="w-4 h-4" />
 			Edit
 		</button>
+		
 		<button
 			type="button"
-			class="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+			class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
 			onclick={handleDelete}
 		>
+			<Trash2 class="w-4 h-4" />
 			Delete
 		</button>
 	</div>
