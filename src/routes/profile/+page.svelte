@@ -5,7 +5,6 @@
 	import { invalidateAll } from '$app/navigation';
 	import { Pencil, Save, X, ArrowLeft } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
-
 	let { data } = $props();
 
 	let isEditing = $state(false);
@@ -13,10 +12,13 @@
 	let errorMessage = $state('');
 	let successMessage = $state('');
 
-	let editForm = $state({
-		username: data.user?.username ?? '',
-		email: data.user?.email ?? '',
-		phone_number: data.user?.phone_number ?? ''
+	let editForm = $state({ username: '', email: '', phone_number: '' });
+	$effect(() => {
+		editForm = {
+			username: data.user?.username ?? '',
+			email: data.user?.email ?? '',
+			phone_number: data.user?.phone_number ?? ''
+		};
 	});
 
 	function startEditing() {

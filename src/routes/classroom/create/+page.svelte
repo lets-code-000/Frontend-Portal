@@ -2,7 +2,6 @@
 	import EntityForm from '$lib/component/EntityForm.svelte';
 	import type { EntityFormConfig } from '$lib/types/entity-form';
 	import type { ActionData, PageData } from './$types';
-
 	interface Props {
 		form: ActionData;
 		data: PageData;
@@ -10,7 +9,7 @@
 
 	let { form, data }: Props = $props();
 
-	const config: EntityFormConfig = {
+	const config: EntityFormConfig = $derived({
 		title: 'Create Classroom',
 		subtitle: 'Add a new classroom to the system',
 		fields: [
@@ -44,7 +43,7 @@
 			}
 		],
 		cancelHref: '/classroom'
-	};
+	});
 </script>
 
 <EntityForm {config} {form} />
