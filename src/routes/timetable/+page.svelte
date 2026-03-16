@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Calendar, Trash2, Plus } from 'lucide-svelte';
+	import { Calendar, Trash2, Plus, Pencil } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 	import PageHeader from '$lib/component/PageHeader.svelte';
@@ -71,16 +71,28 @@
 										{timetable.academic_year}
 									</td>
 									<td class="px-6 py-4 text-center">
-										<form method="POST" action="?/deleteTimetable" use:enhance>
-											<input type="hidden" name="id" value={timetable.id} />
-											<button
-												type="submit"
-												class="text-red-600 hover:text-red-800"
-												title="Delete Timetable"
+										<div class="flex items-center justify-center gap-3">
+										
+											<a
+												href={`/timetable/${timetable.id}/design`}
+												class="text-blue-600 hover:text-blue-800"
+												title="Design Timetable"
 											>
-												<Trash2 class="w-5 h-5 inline-block" />
-											</button>
-										</form>
+												<Pencil class="w-5 h-5 inline-block" />
+											</a>
+
+											<form method="POST" action="?/deleteTimetable" use:enhance>
+												<input type="hidden" name="id" value={timetable.id} />
+												<button
+													type="submit"
+													class="text-red-600 hover:text-red-800"
+													title="Delete Timetable"
+												>
+													<Trash2 class="w-5 h-5 inline-block" />
+												</button>
+											</form>
+
+										</div>
 									</td>
 								</tr>
 							{/each}
