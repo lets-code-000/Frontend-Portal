@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MoreVertical, Pencil, Trash2 } from 'lucide-svelte';
 	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 
 	interface Props {
 		onEdit?: () => void;
@@ -18,8 +19,11 @@
 		event.stopPropagation();
 		event.preventDefault();
 
-		// Close all other menus first
-		window.dispatchEvent(new CustomEvent('closeAllMenus', { detail: { except: menuId } }));
+		if (browser) {
+			window.dispatchEvent(
+				new CustomEvent('closeAllMenus', { detail: { except: menuId } })
+			);
+		}
 
 		if (!isOpen && buttonRef) {
 			const rect = buttonRef.getBoundingClientRect();
@@ -64,15 +68,23 @@
 	}
 
 	onMount(() => {
+		if (!browser) return;
+
 		window.addEventListener('closeAllMenus', handleCloseAllMenus as EventListener);
+		window.addEventListener('click', handleClickOutside);
+		window.addEventListener('scroll', closeMenu);
 	});
 
 	onDestroy(() => {
+		if (!browser) return;
+		
 		window.removeEventListener('closeAllMenus', handleCloseAllMenus as EventListener);
+	    window.removeEventListener('click', handleClickOutside);
+		window.removeEventListener('scroll', closeMenu);
 	});
 </script>
 
-<svelte:window onclick={handleClickOutside} onscroll={closeMenu} />
+
 
 <div class="inline-flex items-center justify-center">
 	<button
