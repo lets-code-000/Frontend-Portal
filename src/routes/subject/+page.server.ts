@@ -102,7 +102,7 @@ export const actions: Actions = {
 						type: 'error',
 						message:
 							errData.detail ||
-							'Failed to delete subject ❌'
+							'Failed to delete subject'
 					}),
 					{ path: '/', maxAge: 5 }
 				);
@@ -114,7 +114,7 @@ export const actions: Actions = {
 				'flash',
 				JSON.stringify({
 					type: 'success',
-					message: 'Subject deleted successfully ✅'
+					message: 'Subject deleted successfully'
 				}),
 				{ path: '/', maxAge: 5 }
 			);
@@ -126,7 +126,7 @@ export const actions: Actions = {
 				JSON.stringify({
 					type: 'error',
 					message:
-						'Server error while deleting subject ⚠️'
+						'Server error while deleting subject'
 				}),
 				{ path: '/', maxAge: 5 }
 			);

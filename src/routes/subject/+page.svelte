@@ -26,7 +26,7 @@
 		setTimeout(() => { toast = null; }, 3000);
 	}
 
-	// 🔍 SEARCH (same as department)
+	// SEARCH
 	function handleSearch(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 
@@ -45,7 +45,7 @@
 		}, 300);
 	}
 
-	// ❌ DELETE (same as department - NO spread operator)
+	// DELETE 
 	async function handleDelete(id: number) {
 		const token = document.cookie
 			.split('; ')
@@ -73,7 +73,6 @@
 
 			showToast('success', 'Subject deleted successfully');
 
-			// 🔄 Reload like department
 			goto(page.url.toString(), { invalidateAll: true });
 
 		} catch (err) {
@@ -115,7 +114,7 @@
 				</Button>
 			</div>
 
-			<!-- 🔍 SEARCH -->
+			<!-- SEARCH -->
 			<div class="mb-4 max-w-sm">
 				<div class="relative">
 					<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
