@@ -25,8 +25,8 @@
 	let isMenuOpen = $state(false);
 
 	const menuItems = [
-		{ name: 'Classroom', path: '../classroom', icon: BookOpenText },
-		{ name: 'Departments', path: '../department', icon: Hotel },
+		{ name: 'Classroom', path: '/classroom', icon: BookOpenText },
+		{ name: 'Departments', path: '/department', icon: Hotel },
 		{ name: 'Users', path: '/user', icon: UserRoundPen },
 		{ name: 'Faculty', path: '/faculty', icon: GraduationCap},
 		{ name: 'Subjects', path: '/subject', icon: BookMarked},
