@@ -1,5 +1,5 @@
+import { redirect, fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
 import { PUBLIC_API_BASE_URL } from '$env/static/public';
 
 interface Faculty {
@@ -29,17 +29,15 @@ interface Slot {
 	subject?: { name: string };
 	faculty?: { name: string };
 	classroom?: {
-		building_name: string;
 		room_no: string;
+		building_name: string;
 	};
 }
 
 export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 	const token = cookies.get('token');
 
-	if (!token) {
-		throw redirect(302, '/');
-	}
+	if (!token) throw redirect(302, '/');
 
 	const timetableId = params.id;
 
@@ -86,11 +84,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 			error: null
 		};
 	} catch (error) {
-		if (error instanceof Response && error.status === 302) {
-			throw error;
-		}
-
-		console.error(error);
+		if (error instanceof Response && error.status === 302) throw error;
 
 		return {
 			timetableId,
@@ -98,7 +92,63 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 			faculties: [],
 			subjects: [],
 			classrooms: [],
-			error: 'Server error while loading timetable data'
+			error: 'Server error'
 		};
+	}
+};
+
+export const actions: Actions = {
+	addSlot: async ({ request, cookies, fetch }) => {
+		const token = cookies.get('token');
+		if (!token) return fail(401, { error: 'Not authorized' });
+
+		const data = await request.formData();
+
+		const payload = {
+			timetable_id: Number(data.get('timetable_id')),
+			subject_id: Number(data.get('subject_id')),
+			faculty_id: Number(data.get('faculty_id')),
+			classroom_id: Number(data.get('classroom_id')),
+			day_of_week: data.get('day_of_week'),
+			start_time: data.get('start_time'),
+			end_time: data.get('end_time')
+		};
+
+		const res = await fetch(`${PUBLIC_API_BASE_URL}/timetable-slots`, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!res.ok) {
+			const err = await res.json().catch(() => null);
+			return fail(res.status, { error: err?.detail || 'Failed to add slot' });
+		}
+
+		return { success: true };
+	},
+
+	deleteSlot: async ({ request, cookies, fetch }) => {
+		const token = cookies.get('token');
+		if (!token) return fail(401, { error: 'Not authorized' });
+
+		const data = await request.formData();
+		const id = data.get('id');
+
+		const res = await fetch(`${PUBLIC_API_BASE_URL}/timetable-slots/${id}`, {
+			method: 'DELETE',
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+
+		if (!res.ok) {
+			return fail(res.status, { error: 'Delete failed' });
+		}
+
+		return { success: true };
 	}
 };
