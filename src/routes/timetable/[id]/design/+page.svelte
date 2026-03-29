@@ -9,7 +9,6 @@
 
 	let { data }: Props = $props();
 
-	// ✅ SAME STYLE AS FACULTY
 	let slots = $state(data.slots || []);
 	let faculties = $state(data.faculties || []);
 	let subjects = $state(data.subjects || []);
@@ -18,6 +17,10 @@
 	let timetableId = data.timetableId;
 
 	let toast = $state<{ type: 'success' | 'error'; message: string } | null>(null);
+
+	// conflict state
+	let conflicts = $state<number[]>([]);
+	let conflictMessage = $state('');
 
 	const days = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 	const times = ['09:00','10:00','11:00','12:00'];
@@ -33,7 +36,7 @@
 			.find(row => row.startsWith('token='))?.split('=')[1] || '';
 	}
 
-	// ✅ FORM STATE
+	// FORM STATE
 	let form = $state({
 		subject_id: '',
 		faculty_id: '',
@@ -43,7 +46,7 @@
 		end_time: ''
 	});
 
-	// ✅ ADD SLOT
+	// ADD SLOT
 	async function addSlot() {
 		const token = getToken();
 		if (!token) {
@@ -66,6 +69,24 @@
 
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({ detail: 'Failed' }));
+
+				// handle conflict
+				if (res.status === 409) {
+					conflictMessage = err.detail;
+
+					conflicts = slots
+						.filter((s: any) =>
+							s.day_of_week === form.day_of_week &&
+							s.start_time < form.end_time &&
+							s.end_time > form.start_time &&
+							(
+								s.faculty_id === Number(form.faculty_id) ||
+								s.classroom_id === Number(form.classroom_id)
+							)
+						)
+						.map((s: any) => s.id);
+				}
+
 				showToast('error', err.detail);
 				return;
 			}
@@ -73,13 +94,17 @@
 			const newSlot = await res.json();
 			slots = [...slots, newSlot];
 
+			//clear conflicts on success
+			conflicts = [];
+			conflictMessage = '';
+
 			showToast('success', 'Slot added');
 		} catch {
 			showToast('error', 'Server error');
 		}
 	}
 
-	// ✅ DELETE SLOT
+	// DELETE SLOT
 	async function deleteSlot(id: number) {
 		const token = getToken();
 		if (!token) return;
@@ -106,7 +131,7 @@
 		}
 	}
 
-	// ✅ FIND SLOT
+	// FIND SLOT
 	function getSlot(day: string, time: string) {
 		return slots.find((s: any) =>
 			s.day_of_week === day &&
@@ -114,7 +139,7 @@
 		);
 	}
 
-	// ✅ FILTER FACULTY
+	// FILTER FACULTY
 	function isFacultyBusy(facultyId: number) {
 		return slots.some(
 			(s: any) =>
@@ -152,9 +177,7 @@
 		<select bind:value={form.faculty_id} class="border p-2">
 			<option value="">Faculty</option>
 			{#each faculties as f}
-				{#if !isFacultyBusy(f.id)}
-					<option value={f.id}>{f.name}</option>
-				{/if}
+				<option value={f.id}>{f.name}</option>
 			{/each}
 		</select>
 
@@ -199,15 +222,22 @@
 
 					{#each days as day}
 					{@const slot = getSlot(day, time)}
-						<td class="border p-2 text-sm">
-
-							
+						<!--highlight conflict -->
+						<td class="border p-2 text-sm 
+							{slot && conflicts.includes(slot.id) ? 'bg-red-200 border-red-500' : ''}">
 
 							{#if slot}
 								<div>
 									<b>{slot.subject?.name}</b><br />
 									{slot.faculty?.name}<br />
 									Room {slot.classroom?.room_no}
+
+									<!--conflict message -->
+									{#if conflicts.includes(slot.id)}
+										<div class="text-xs text-red-600 mt-1">
+											{conflictMessage}
+										</div>
+									{/if}
 
 									<button
 										onclick={() => deleteSlot(slot.id)}
