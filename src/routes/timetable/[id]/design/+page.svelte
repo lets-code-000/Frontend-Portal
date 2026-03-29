@@ -222,7 +222,7 @@
 
 					{#each days as day}
 					{@const slot = getSlot(day, time)}
-						<!-- ✅ UPDATED: highlight conflict -->
+						<!--highlight conflict -->
 						<td class="border p-2 text-sm 
 							{slot && conflicts.includes(slot.id) ? 'bg-red-200 border-red-500' : ''}">
 
