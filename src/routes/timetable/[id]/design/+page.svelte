@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { PUBLIC_API_BASE_URL } from '$env/static/public';
-	import { Trash2, Plus } from 'lucide-svelte';
+	import { Trash2, Plus, Pencil } from 'lucide-svelte';
+	import ActionMenu from '$lib/component/ActionMenu.svelte';
 
 	interface Props {
 		data: PageData;
@@ -21,6 +22,18 @@
 	// conflict state
 	let conflicts = $state<number[]>([]);
 	let conflictMessage = $state('');
+
+	// EDIT STATE 
+	let editingSlot = $state<any>(null);
+
+	let editForm = $state({
+		subject_id: '',
+		faculty_id: '',
+		classroom_id: '',
+		day_of_week: '',
+		start_time: '',
+		end_time: ''
+	});
 
 	const days = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
 	const times = ['09:00','10:00','11:00','12:00'];
@@ -46,11 +59,22 @@
 		end_time: ''
 	});
 
-	//classroom availability check
+	// classroom availability check
 	function isClassroomBusy(classroomId: number) {
 		return slots.some(
 			(s: any) =>
 				s.classroom_id === classroomId &&
+				s.day_of_week === form.day_of_week &&
+				s.start_time < form.end_time &&
+				s.end_time > form.start_time
+		);
+	}
+
+	// faculty availability
+	function isFacultyBusy(facultyId: number) {
+		return slots.some(
+			(s: any) =>
+				s.faculty_id === facultyId &&
 				s.day_of_week === form.day_of_week &&
 				s.start_time < form.end_time &&
 				s.end_time > form.start_time
@@ -81,7 +105,6 @@
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({ detail: 'Failed' }));
 
-				// conflict handling
 				if (res.status === 409) {
 					conflictMessage = err.detail;
 
@@ -141,22 +164,72 @@
 		}
 	}
 
+	// OPEN EDIT
+	function openEdit(slot: any) {
+		editingSlot = slot;
+
+		editForm = {
+			subject_id: slot.subject_id,
+			faculty_id: slot.faculty_id,
+			classroom_id: slot.classroom_id,
+			day_of_week: slot.day_of_week,
+			start_time: slot.start_time,
+			end_time: slot.end_time
+		};
+	}
+
+	// UPDATE SLOT
+	async function updateSlot() {
+		if (!editingSlot) return;
+
+		const token = getToken();
+
+		try {
+			const res = await fetch(
+				`${PUBLIC_API_BASE_URL}/timetable-slots/${editingSlot.id}`,
+				{
+					method: 'PUT',
+					headers: {
+						Authorization: `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						timetable_id: Number(timetableId),
+						subject_id: Number(editForm.subject_id),
+						faculty_id: Number(editForm.faculty_id),
+						classroom_id: Number(editForm.classroom_id),
+						day_of_week: editForm.day_of_week,
+						start_time: editForm.start_time,
+						end_time: editForm.end_time
+					})
+				}
+			);
+
+			if (!res.ok) {
+				const err = await res.json();
+				showToast('error', err.detail || 'Update failed');
+				return;
+			}
+
+			const updated = await res.json();
+
+			slots = slots.map((s: any) =>
+				s.id === editingSlot.id ? updated : s
+			);
+
+			editingSlot = null;
+			showToast('success', 'Slot updated');
+
+		} catch {
+			showToast('error', 'Server error');
+		}
+	}
+
 	// FIND SLOT
 	function getSlot(day: string, time: string) {
 		return slots.find((s: any) =>
 			s.day_of_week === day &&
 			s.start_time.startsWith(time)
-		);
-	}
-
-	// faculty availability
-	function isFacultyBusy(facultyId: number) {
-		return slots.some(
-			(s: any) =>
-				s.faculty_id === facultyId &&
-				s.day_of_week === form.day_of_week &&
-				s.start_time < form.end_time &&
-				s.end_time > form.start_time
 		);
 	}
 </script>
@@ -184,29 +257,20 @@
 			{/each}
 		</select>
 
-		<!-- Faculty filtering with disabled -->
 		<select bind:value={form.faculty_id} class="border p-2">
 			<option value="">Faculty</option>
 			{#each faculties as f}
-				<option 
-					value={f.id}
-					disabled={isFacultyBusy(f.id)}
-				>
+				<option value={f.id} disabled={isFacultyBusy(f.id)}>
 					{f.name} {isFacultyBusy(f.id) ? '(Busy)' : ''}
 				</option>
 			{/each}
 		</select>
 
-		<!-- Classroom filtering -->
 		<select bind:value={form.classroom_id} class="border p-2">
 			<option value="">Classroom</option>
 			{#each classrooms as c}
-				<option 
-					value={c.id}
-					disabled={isClassroomBusy(c.id)}
-				>
+				<option value={c.id} disabled={isClassroomBusy(c.id)}>
 					{c.building_name} - {c.room_no}
-					{isClassroomBusy(c.id) ? ' (Occupied)' : ''}
 				</option>
 			{/each}
 		</select>
@@ -252,15 +316,10 @@
 									{slot.faculty?.name}<br />
 									Room {slot.classroom?.room_no}
 
-									{#if conflicts.includes(slot.id)}
-										<div class="text-xs text-red-600 mt-1">
-											{conflictMessage}
-										</div>
-									{/if}
-
-									<button onclick={() => deleteSlot(slot.id)} class="text-red-500 ml-2">
-										<Trash2 size={16}/>
-									</button>
+									<ActionMenu
+										onEdit={() => openEdit(slot)}
+										onDelete={() => deleteSlot(slot.id)}
+									/>
 								</div>
 							{:else}
 								-
@@ -274,3 +333,52 @@
 	</table>
 
 </div>
+
+<!-- EDIT MODAL -->
+{#if editingSlot}
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm">
+	<div class="bg-white p-6 rounded w-[400px] space-y-3 shadow-2xl">
+
+		<h2 class="text-lg font-semibold">Edit Slot</h2>
+
+		<select bind:value={editForm.subject_id} class="border p-2 w-full">
+			{#each subjects as s}
+				<option value={s.id}>{s.name}</option>
+			{/each}
+		</select>
+
+		<select bind:value={editForm.faculty_id} class="border p-2 w-full">
+			{#each faculties as f}
+				<option value={f.id}>{f.name}</option>
+			{/each}
+		</select>
+
+		<select bind:value={editForm.classroom_id} class="border p-2 w-full">
+			{#each classrooms as c}
+				<option value={c.id}>{c.building_name} - {c.room_no}</option>
+			{/each}
+		</select>
+
+		<select bind:value={editForm.day_of_week} class="border p-2 w-full">
+			{#each days as d}
+				<option value={d}>{d}</option>
+			{/each}
+		</select>
+
+		<input type="time" bind:value={editForm.start_time} class="border p-2 w-full"/>
+		<input type="time" bind:value={editForm.end_time} class="border p-2 w-full"/>
+
+		<div class="flex justify-end gap-2">
+			<button onclick={() => editingSlot = null} class="px-3 py-1 border rounded">
+				Cancel
+			</button>
+
+			<button onclick={updateSlot} class="px-3 py-1 bg-blue-600 text-white rounded">
+				Update
+			</button>
+		</div>
+
+	</div>
+</div>
+{/if}
+

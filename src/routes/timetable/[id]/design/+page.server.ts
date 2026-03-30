@@ -36,7 +36,6 @@ interface Slot {
 
 export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 	const token = cookies.get('token');
-
 	if (!token) throw redirect(302, '/');
 
 	const timetableId = params.id;
@@ -83,9 +82,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 			classrooms: await classroomRes.json(),
 			error: null
 		};
-	} catch (error) {
-		if (error instanceof Response && error.status === 302) throw error;
-
+	} catch {
 		return {
 			timetableId,
 			slots: [],
@@ -147,6 +144,41 @@ export const actions: Actions = {
 
 		if (!res.ok) {
 			return fail(res.status, { error: 'Delete failed' });
+		}
+
+		return { success: true };
+	},
+
+	//UPDATE SLOT
+	updateSlot: async ({ request, cookies, fetch }) => {
+		const token = cookies.get('token');
+		if (!token) return fail(401, { error: 'Not authorized' });
+
+		const data = await request.formData();
+		const id = data.get('id');
+
+		const payload = {
+			timetable_id: Number(data.get('timetable_id')),
+			subject_id: Number(data.get('subject_id')),
+			faculty_id: Number(data.get('faculty_id')),
+			classroom_id: Number(data.get('classroom_id')),
+			day_of_week: data.get('day_of_week'),
+			start_time: data.get('start_time'),
+			end_time: data.get('end_time')
+		};
+
+		const res = await fetch(`${PUBLIC_API_BASE_URL}/timetable-slots/${id}`, {
+			method: 'PUT',
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!res.ok) {
+			const err = await res.json().catch(() => null);
+			return fail(res.status, { error: err?.detail || 'Update failed' });
 		}
 
 		return { success: true };
