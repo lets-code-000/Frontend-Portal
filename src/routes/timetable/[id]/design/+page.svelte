@@ -46,6 +46,17 @@
 		end_time: ''
 	});
 
+	//classroom availability check
+	function isClassroomBusy(classroomId: number) {
+		return slots.some(
+			(s: any) =>
+				s.classroom_id === classroomId &&
+				s.day_of_week === form.day_of_week &&
+				s.start_time < form.end_time &&
+				s.end_time > form.start_time
+		);
+	}
+
 	// ADD SLOT
 	async function addSlot() {
 		const token = getToken();
@@ -70,7 +81,7 @@
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({ detail: 'Failed' }));
 
-				// handle conflict
+				// conflict handling
 				if (res.status === 409) {
 					conflictMessage = err.detail;
 
@@ -94,7 +105,6 @@
 			const newSlot = await res.json();
 			slots = [...slots, newSlot];
 
-			//clear conflicts on success
 			conflicts = [];
 			conflictMessage = '';
 
@@ -139,7 +149,7 @@
 		);
 	}
 
-	// FILTER FACULTY
+	// faculty availability
 	function isFacultyBusy(facultyId: number) {
 		return slots.some(
 			(s: any) =>
@@ -174,18 +184,29 @@
 			{/each}
 		</select>
 
+		<!-- Faculty filtering with disabled -->
 		<select bind:value={form.faculty_id} class="border p-2">
 			<option value="">Faculty</option>
 			{#each faculties as f}
-				<option value={f.id}>{f.name}</option>
+				<option 
+					value={f.id}
+					disabled={isFacultyBusy(f.id)}
+				>
+					{f.name} {isFacultyBusy(f.id) ? '(Busy)' : ''}
+				</option>
 			{/each}
 		</select>
 
+		<!-- Classroom filtering -->
 		<select bind:value={form.classroom_id} class="border p-2">
 			<option value="">Classroom</option>
 			{#each classrooms as c}
-				<option value={c.id}>
+				<option 
+					value={c.id}
+					disabled={isClassroomBusy(c.id)}
+				>
 					{c.building_name} - {c.room_no}
+					{isClassroomBusy(c.id) ? ' (Occupied)' : ''}
 				</option>
 			{/each}
 		</select>
@@ -222,7 +243,6 @@
 
 					{#each days as day}
 					{@const slot = getSlot(day, time)}
-						<!--highlight conflict -->
 						<td class="border p-2 text-sm 
 							{slot && conflicts.includes(slot.id) ? 'bg-red-200 border-red-500' : ''}">
 
@@ -232,17 +252,13 @@
 									{slot.faculty?.name}<br />
 									Room {slot.classroom?.room_no}
 
-									<!--conflict message -->
 									{#if conflicts.includes(slot.id)}
 										<div class="text-xs text-red-600 mt-1">
 											{conflictMessage}
 										</div>
 									{/if}
 
-									<button
-										onclick={() => deleteSlot(slot.id)}
-										class="text-red-500 ml-2"
-									>
+									<button onclick={() => deleteSlot(slot.id)} class="text-red-500 ml-2">
 										<Trash2 size={16}/>
 									</button>
 								</div>
@@ -252,7 +268,6 @@
 
 						</td>
 					{/each}
-
 				</tr>
 			{/each}
 		</tbody>
