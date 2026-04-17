@@ -1,9 +1,13 @@
 <script lang="ts">
-	export let modalData: any;
+	export let editingSlot: any;
+	export let editForm: any;
+	export let subjects: any[];
+	export let faculties: any[];
+	export let classrooms: any[];
+	export let days: string[];
+
 	export let onClose: () => void;
 	export let onUpdate: () => void;
-
-	$: ({ editingSlot, editForm, subjects, faculties, classrooms, days } = modalData);
 </script>
 
 {#if editingSlot}
