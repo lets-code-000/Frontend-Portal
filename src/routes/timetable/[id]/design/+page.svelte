@@ -62,22 +62,22 @@
 	// classroom availability check
 	function isClassroomBusy(classroomId: number) {
 		return slots.some(
-			(s: any) =>
-				s.classroom_id === classroomId &&
-				s.day_of_week === form.day_of_week &&
-				s.start_time < form.end_time &&
-				s.end_time > form.start_time
+			(slot: any) =>
+				slot.classroom_id === classroomId &&
+				slot.day_of_week === form.day_of_week &&
+				slot.start_time < form.end_time &&
+				slot.end_time > form.start_time
 		);
 	}
 
 	// faculty availability
 	function isFacultyBusy(facultyId: number) {
 		return slots.some(
-			(s: any) =>
-				s.faculty_id === facultyId &&
-				s.day_of_week === form.day_of_week &&
-				s.start_time < form.end_time &&
-				s.end_time > form.start_time
+			(slot: any) =>
+				slot.faculty_id === facultyId &&
+				slot.day_of_week === form.day_of_week &&
+				slot.start_time < form.end_time &&
+				slot.end_time > form.start_time
 		);
 	}
 
@@ -109,16 +109,16 @@
 					conflictMessage = err.detail;
 
 					conflicts = slots
-						.filter((s: any) =>
-							s.day_of_week === form.day_of_week &&
-							s.start_time < form.end_time &&
-							s.end_time > form.start_time &&
+						.filter((slot: any) =>
+							slot.day_of_week === form.day_of_week &&
+							slot.start_time < form.end_time &&
+							slot.end_time > form.start_time &&
 							(
-								s.faculty_id === Number(form.faculty_id) ||
-								s.classroom_id === Number(form.classroom_id)
+								slot.faculty_id === Number(form.faculty_id) ||
+								slot.classroom_id === Number(form.classroom_id)
 							)
 						)
-						.map((s: any) => s.id);
+						.map((slot: any) => slot.id);
 				}
 
 				showToast('error', err.detail);
@@ -143,7 +143,7 @@
 		if (!token) return;
 
 		const previous = [...slots];
-		slots = slots.filter((s: any) => s.id !== id);
+		slots = slots.filter((slot: any) => slot.id !== id);
 
 		try {
 			const res = await fetch(`${PUBLIC_API_BASE_URL}/timetable-slots/${id}`, {
@@ -213,8 +213,8 @@
 
 			const updated = await res.json();
 
-			slots = slots.map((s: any) =>
-				s.id === editingSlot.id ? updated : s
+			slots = slots.map((slot: any) =>
+				slot.id === editingSlot.id ? updated : slot
 			);
 
 			editingSlot = null;
@@ -227,9 +227,9 @@
 
 	// FIND SLOT
 	function getSlot(day: string, time: string) {
-		return slots.find((s: any) =>
-			s.day_of_week === day &&
-			s.start_time.startsWith(time)
+		return slots.find((slot: any) =>
+			slot.day_of_week === day &&
+			slot.start_time.startsWith(time)
 		);
 	}
 </script>
@@ -252,32 +252,32 @@
 
 		<select bind:value={form.subject_id} class="border p-2">
 			<option value="">Subject</option>
-			{#each subjects as s}
-				<option value={s.id}>{s.name}</option>
+			{#each subjects as subject}
+				<option value={subject.id}>{subject.name}</option>
 			{/each}
 		</select>
 
 		<select bind:value={form.faculty_id} class="border p-2">
 			<option value="">Faculty</option>
-			{#each faculties as f}
-				<option value={f.id} disabled={isFacultyBusy(f.id)}>
-					{f.name} {isFacultyBusy(f.id) ? '(Busy)' : ''}
+			{#each faculties as faculty}
+				<option value={faculty.id} disabled={isFacultyBusy(faculty.id)}>
+					{faculty.name} {isFacultyBusy(faculty.id) ? '(Busy)' : ''}
 				</option>
 			{/each}
 		</select>
 
 		<select bind:value={form.classroom_id} class="border p-2">
 			<option value="">Classroom</option>
-			{#each classrooms as c}
-				<option value={c.id} disabled={isClassroomBusy(c.id)}>
-					{c.building_name} - {c.room_no}
+			{#each classrooms as classroom}
+				<option value={classroom.id} disabled={isClassroomBusy(classroom.id)}>
+					{classroom.building_name} - {classroom.room_no}
 				</option>
 			{/each}
 		</select>
 
 		<select bind:value={form.day_of_week} class="border p-2">
-			{#each days as d}
-				<option value={d}>{d}</option>
+			{#each days as day}
+				<option value={day}>{day}</option>
 			{/each}
 		</select>
 
@@ -294,8 +294,8 @@
 		<thead>
 			<tr>
 				<th class="border p-2">Time</th>
-				{#each days as d}
-					<th class="border p-2">{d}</th>
+				{#each days as day}
+					<th class="border p-2">{day}</th>
 				{/each}
 			</tr>
 		</thead>
@@ -342,26 +342,26 @@
 		<h2 class="text-lg font-semibold">Edit Slot</h2>
 
 		<select bind:value={editForm.subject_id} class="border p-2 w-full">
-			{#each subjects as s}
-				<option value={s.id}>{s.name}</option>
+			{#each subjects as subject}
+				<option value={subject.id}>{subject.name}</option>
 			{/each}
 		</select>
 
 		<select bind:value={editForm.faculty_id} class="border p-2 w-full">
-			{#each faculties as f}
-				<option value={f.id}>{f.name}</option>
+			{#each faculties as faculty}
+				<option value={faculty.id}>{faculty.name}</option>
 			{/each}
 		</select>
 
 		<select bind:value={editForm.classroom_id} class="border p-2 w-full">
-			{#each classrooms as c}
-				<option value={c.id}>{c.building_name} - {c.room_no}</option>
+			{#each classrooms as classroom}
+				<option value={classroom.id}>{classroom.building_name} - {classroom.room_no}</option>
 			{/each}
 		</select>
 
 		<select bind:value={editForm.day_of_week} class="border p-2 w-full">
-			{#each days as d}
-				<option value={d}>{d}</option>
+			{#each days as day}
+				<option value={day}>{day}</option>
 			{/each}
 		</select>
 
