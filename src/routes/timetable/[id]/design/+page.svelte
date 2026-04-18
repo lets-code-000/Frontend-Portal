@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { PUBLIC_API_BASE_URL } from '$env/static/public';
-	import { Trash2, Plus, Pencil } from 'lucide-svelte';
+	import { Plus} from 'lucide-svelte';
 	import ActionMenu from '$lib/component/ActionMenu.svelte';
 
 	interface Props {
@@ -14,6 +14,18 @@
 	let faculties = $state(data.faculties || []);
 	let subjects = $state(data.subjects || []);
 	let classrooms = $state(data.classrooms || []);
+	let blocks = $derived(generateBlocks(slots));
+
+	let slotMap = $derived.by(() => {
+		const map = new Map();
+
+		slots.forEach((slot: any) => {
+			const key = `${slot.day_of_week}-${slot.start_time.slice(0,5)}-${slot.end_time.slice(0,5)}`;
+			map.set(key, slot);
+		});
+
+		return map;
+	});
 
 	let timetableId = data.timetableId;
 
@@ -36,7 +48,6 @@
 	});
 
 	const days = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
-	const times = ['09:00','10:00','11:00','12:00'];
 
 	function showToast(type: 'success' | 'error', message: string) {
 		toast = { type, message };
@@ -78,6 +89,25 @@
 				slot.day_of_week === form.day_of_week &&
 				slot.start_time < form.end_time &&
 				slot.end_time > form.start_time
+		);
+	}
+
+	function generateBlocks(slots: any[]) {
+		const map = new Map();
+
+		slots.forEach(slot => {
+			const start = slot.start_time.slice(0,5);
+			const end = slot.end_time.slice(0,5);
+
+			const key = `${start}-${end}`;
+
+			if (!map.has(key)) {
+				map.set(key, { start, end });
+			}
+		});
+
+		return Array.from(map.values()).sort((a, b) =>
+			a.start.localeCompare(b.start)
 		);
 	}
 
@@ -226,11 +256,8 @@
 	}
 
 	// FIND SLOT
-	function getSlot(day: string, time: string) {
-		return slots.find((slot: any) =>
-			slot.day_of_week === day &&
-			slot.start_time.startsWith(time)
-		);
+	function getSlot(day: string, block: { start: string; end: string }) {
+		return slotMap.get(`${day}-${block.start}-${block.end}`);
 	}
 </script>
 
@@ -301,12 +328,12 @@
 		</thead>
 
 		<tbody>
-			{#each times as time}
+			{#each blocks as block}
 				<tr>
-					<td class="border p-2">{time}</td>
+					<td>{block.start} - {block.end}</td>
 
 					{#each days as day}
-					{@const slot = getSlot(day, time)}
+					{@const slot = getSlot(day, block)}
 						<td class="border p-2 text-sm 
 							{slot && conflicts.includes(slot.id) ? 'bg-red-200 border-red-500' : ''}">
 
